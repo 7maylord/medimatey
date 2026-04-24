@@ -1,0 +1,366 @@
+[
+  {
+    "drugA": "warfarin",
+    "drugB": "aspirin",
+    "severity": "major",
+    "description": "Concurrent use significantly increases bleeding risk. Aspirin inhibits platelet aggregation and can displace warfarin from plasma proteins.",
+    "recommendation": "Avoid combination. If necessary, monitor INR closely and watch for signs of bleeding."
+  },
+  {
+    "drugA": "warfarin",
+    "drugB": "ibuprofen",
+    "severity": "major",
+    "description": "NSAIDs inhibit platelet function and can cause GI bleeding, significantly enhancing warfarin's anticoagulant effect.",
+    "recommendation": "Avoid concurrent use. Use acetaminophen for pain relief instead."
+  },
+  {
+    "drugA": "warfarin",
+    "drugB": "naproxen",
+    "severity": "major",
+    "description": "NSAIDs inhibit platelet function and increase GI bleeding risk, potentiating warfarin's anticoagulant effect.",
+    "recommendation": "Avoid concurrent use. Monitor INR frequently if co-administration is unavoidable."
+  },
+  {
+    "drugA": "warfarin",
+    "drugB": "metronidazole",
+    "severity": "major",
+    "description": "Metronidazole inhibits CYP2C9, reducing warfarin metabolism and significantly increasing anticoagulant effect.",
+    "recommendation": "Reduce warfarin dose and monitor INR closely during and after metronidazole course."
+  },
+  {
+    "drugA": "warfarin",
+    "drugB": "fluconazole",
+    "severity": "major",
+    "description": "Fluconazole is a potent CYP2C9 inhibitor that markedly elevates warfarin levels.",
+    "recommendation": "Reduce warfarin dose by 25–50%. Monitor INR daily during fluconazole therapy."
+  },
+  {
+    "drugA": "warfarin",
+    "drugB": "amiodarone",
+    "severity": "major",
+    "description": "Amiodarone and its metabolite inhibit warfarin metabolism via CYP2C9 and CYP3A4, increasing bleeding risk.",
+    "recommendation": "Reduce warfarin dose by 30–50%. Monitor INR at least weekly for several months."
+  },
+  {
+    "drugA": "simvastatin",
+    "drugB": "amiodarone",
+    "severity": "major",
+    "description": "Amiodarone inhibits CYP3A4 and CYP2C9, raising simvastatin plasma levels and risk of myopathy/rhabdomyolysis.",
+    "recommendation": "Limit simvastatin dose to 20 mg/day when co-administered with amiodarone."
+  },
+  {
+    "drugA": "simvastatin",
+    "drugB": "clarithromycin",
+    "severity": "major",
+    "description": "Clarithromycin strongly inhibits CYP3A4, leading to greatly increased simvastatin exposure and myopathy risk.",
+    "recommendation": "Suspend simvastatin during clarithromycin course. Resume after antibiotic is completed."
+  },
+  {
+    "drugA": "atorvastatin",
+    "drugB": "clarithromycin",
+    "severity": "moderate",
+    "description": "CYP3A4 inhibition by clarithromycin raises atorvastatin levels, increasing myopathy risk.",
+    "recommendation": "Use lowest effective atorvastatin dose or temporarily switch to a non-CYP3A4-metabolised statin."
+  },
+  {
+    "drugA": "metformin",
+    "drugB": "alcohol",
+    "severity": "moderate",
+    "description": "Alcohol potentiates metformin-associated lactic acidosis risk and can cause unpredictable hypoglycaemia.",
+    "recommendation": "Limit alcohol intake. Avoid binge drinking entirely."
+  },
+  {
+    "drugA": "metformin",
+    "drugB": "contrast dye",
+    "severity": "major",
+    "description": "Iodinated contrast media can cause acute kidney injury, which prevents metformin clearance and raises lactic acidosis risk.",
+    "recommendation": "Hold metformin 48 hours before and after iodinated contrast procedures. Confirm renal function before resuming."
+  },
+  {
+    "drugA": "lisinopril",
+    "drugB": "aspirin",
+    "severity": "moderate",
+    "description": "Aspirin may blunt the blood-pressure-lowering effect of ACE inhibitors through prostaglandin inhibition.",
+    "recommendation": "Use the lowest effective aspirin dose. Monitor blood pressure regularly."
+  },
+  {
+    "drugA": "lisinopril",
+    "drugB": "potassium",
+    "severity": "moderate",
+    "description": "ACE inhibitors reduce potassium excretion; supplemental potassium or potassium-sparing diuretics can cause hyperkalaemia.",
+    "recommendation": "Monitor serum potassium levels regularly. Adjust supplementation accordingly."
+  },
+  {
+    "drugA": "lisinopril",
+    "drugB": "spironolactone",
+    "severity": "moderate",
+    "description": "Combining an ACE inhibitor with a potassium-sparing diuretic markedly increases hyperkalaemia risk.",
+    "recommendation": "Monitor potassium and renal function closely, especially in elderly or diabetic patients."
+  },
+  {
+    "drugA": "lisinopril",
+    "drugB": "ibuprofen",
+    "severity": "moderate",
+    "description": "NSAIDs reduce renal prostaglandin synthesis, decreasing the antihypertensive and renoprotective effects of ACE inhibitors.",
+    "recommendation": "Avoid regular NSAID use. Use acetaminophen for analgesia. Monitor blood pressure and renal function."
+  },
+  {
+    "drugA": "amlodipine",
+    "drugB": "simvastatin",
+    "severity": "moderate",
+    "description": "Amlodipine inhibits CYP3A4, increasing simvastatin exposure and myopathy risk.",
+    "recommendation": "Limit simvastatin to 20 mg/day when co-administered with amlodipine."
+  },
+  {
+    "drugA": "metoprolol",
+    "drugB": "verapamil",
+    "severity": "major",
+    "description": "Combined negative chronotropic and dromotropic effects can cause severe bradycardia, heart block, or cardiac arrest.",
+    "recommendation": "Avoid combination. If necessary, monitor ECG and heart rate continuously."
+  },
+  {
+    "drugA": "metoprolol",
+    "drugB": "diltiazem",
+    "severity": "moderate",
+    "description": "Additive depression of SA and AV node conduction may result in bradycardia and hypotension.",
+    "recommendation": "Monitor heart rate and blood pressure. Use lower doses of each agent."
+  },
+  {
+    "drugA": "metoprolol",
+    "drugB": "fluoxetine",
+    "severity": "moderate",
+    "description": "Fluoxetine inhibits CYP2D6, the primary enzyme metabolising metoprolol, causing 4–6× increase in metoprolol levels.",
+    "recommendation": "Monitor for bradycardia, fatigue, and hypotension. Consider reducing metoprolol dose."
+  },
+  {
+    "drugA": "clopidogrel",
+    "drugB": "omeprazole",
+    "severity": "moderate",
+    "description": "Omeprazole inhibits CYP2C19, the enzyme that converts clopidogrel to its active metabolite, reducing antiplatelet efficacy.",
+    "recommendation": "Use pantoprazole (weaker CYP2C19 inhibitor) instead of omeprazole when a PPI is required."
+  },
+  {
+    "drugA": "clopidogrel",
+    "drugB": "aspirin",
+    "severity": "moderate",
+    "description": "Dual antiplatelet therapy increases bleeding risk, although the combination is intentional in certain cardiovascular indications.",
+    "recommendation": "Only use together when prescribed for a specific cardiovascular indication. Monitor for bleeding."
+  },
+  {
+    "drugA": "digoxin",
+    "drugB": "amiodarone",
+    "severity": "major",
+    "description": "Amiodarone increases digoxin levels by 70–100% through inhibition of P-glycoprotein and renal clearance reduction.",
+    "recommendation": "Halve the digoxin dose when starting amiodarone. Monitor digoxin levels and ECG closely."
+  },
+  {
+    "drugA": "digoxin",
+    "drugB": "clarithromycin",
+    "severity": "major",
+    "description": "Clarithromycin inhibits P-glycoprotein, reducing digoxin clearance and raising serum levels to potentially toxic concentrations.",
+    "recommendation": "Monitor digoxin levels and renal function during and after clarithromycin therapy."
+  },
+  {
+    "drugA": "digoxin",
+    "drugB": "furosemide",
+    "severity": "moderate",
+    "description": "Loop diuretics can cause hypokalaemia, which potentiates digoxin toxicity even at therapeutic digoxin levels.",
+    "recommendation": "Monitor potassium and magnesium levels. Replace electrolytes as needed."
+  },
+  {
+    "drugA": "fluoxetine",
+    "drugB": "tramadol",
+    "severity": "major",
+    "description": "Combined serotonergic activity raises the risk of serotonin syndrome. Fluoxetine also inhibits CYP2D6, impairing tramadol activation.",
+    "recommendation": "Avoid combination. Use an alternative analgesic or an SSRI with lower serotonin risk."
+  },
+  {
+    "drugA": "sertraline",
+    "drugB": "tramadol",
+    "severity": "major",
+    "description": "Additive serotonergic stimulation increases serotonin syndrome risk (agitation, hyperthermia, tachycardia, clonus).",
+    "recommendation": "Avoid combination. If necessary, use the lowest effective doses and monitor closely."
+  },
+  {
+    "drugA": "ssri",
+    "drugB": "maoi",
+    "severity": "contraindicated",
+    "description": "Combination causes potentially life-threatening serotonin syndrome: hyperthermia, rigidity, rhabdomyolysis, seizures, death.",
+    "recommendation": "Contraindicated. Allow at least 14 days washout after stopping an MAOI before starting an SSRI, and vice versa."
+  },
+  {
+    "drugA": "ciprofloxacin",
+    "drugB": "tizanidine",
+    "severity": "contraindicated",
+    "description": "Ciprofloxacin dramatically increases tizanidine plasma levels (up to 10×), causing profound hypotension and sedation.",
+    "recommendation": "Contraindicated. Use an alternative antibiotic if the patient is on tizanidine."
+  },
+  {
+    "drugA": "ciprofloxacin",
+    "drugB": "theophylline",
+    "severity": "major",
+    "description": "Ciprofloxacin inhibits CYP1A2, significantly raising theophylline levels and risk of seizures and arrhythmias.",
+    "recommendation": "Reduce theophylline dose and monitor serum levels frequently."
+  },
+  {
+    "drugA": "azithromycin",
+    "drugB": "amiodarone",
+    "severity": "major",
+    "description": "Both drugs prolong the QT interval; combination substantially increases the risk of torsades de pointes.",
+    "recommendation": "Avoid combination. Choose an alternative antibiotic without QT-prolonging effects."
+  },
+  {
+    "drugA": "levothyroxine",
+    "drugB": "calcium",
+    "severity": "moderate",
+    "description": "Calcium supplements impair levothyroxine absorption from the GI tract, reducing thyroid hormone bioavailability.",
+    "recommendation": "Separate administration by at least 4 hours."
+  },
+  {
+    "drugA": "levothyroxine",
+    "drugB": "iron",
+    "severity": "moderate",
+    "description": "Iron salts chelate levothyroxine in the gut, reducing its absorption by up to 50%.",
+    "recommendation": "Take levothyroxine on an empty stomach, at least 4 hours before or after iron supplementation."
+  },
+  {
+    "drugA": "lithium",
+    "drugB": "ibuprofen",
+    "severity": "major",
+    "description": "NSAIDs reduce renal lithium clearance, raising serum lithium to potentially toxic levels.",
+    "recommendation": "Avoid NSAIDs in patients on lithium. Use acetaminophen. Monitor lithium levels if NSAID use is unavoidable."
+  },
+  {
+    "drugA": "lithium",
+    "drugB": "lisinopril",
+    "severity": "major",
+    "description": "ACE inhibitors reduce renal sodium and lithium excretion, potentially causing lithium toxicity.",
+    "recommendation": "Monitor lithium levels closely when initiating or adjusting ACE inhibitor dose."
+  },
+  {
+    "drugA": "sildenafil",
+    "drugB": "nitrate",
+    "severity": "contraindicated",
+    "description": "Additive nitric oxide–mediated vasodilation causes severe, potentially fatal hypotension.",
+    "recommendation": "Absolutely contraindicated. Do not co-administer under any circumstances."
+  },
+  {
+    "drugA": "sildenafil",
+    "drugB": "isosorbide",
+    "severity": "contraindicated",
+    "description": "Same mechanism as sildenafil + nitrate: catastrophic hypotension risk.",
+    "recommendation": "Absolutely contraindicated."
+  },
+  {
+    "drugA": "methotrexate",
+    "drugB": "ibuprofen",
+    "severity": "major",
+    "description": "NSAIDs reduce renal methotrexate clearance, raising levels and risk of severe toxicity (bone marrow suppression, nephrotoxicity).",
+    "recommendation": "Avoid NSAIDs with methotrexate, especially at higher doses. Use acetaminophen for analgesia."
+  },
+  {
+    "drugA": "methotrexate",
+    "drugB": "trimethoprim",
+    "severity": "major",
+    "description": "Both drugs inhibit dihydrofolate reductase; combination produces severe, additive folate deficiency and bone marrow suppression.",
+    "recommendation": "Avoid combination. If unavoidable, monitor CBC closely and administer folinic acid rescue."
+  },
+  {
+    "drugA": "tacrolimus",
+    "drugB": "fluconazole",
+    "severity": "major",
+    "description": "Fluconazole inhibits CYP3A4 and CYP2C19, dramatically raising tacrolimus levels and increasing nephrotoxicity risk.",
+    "recommendation": "Reduce tacrolimus dose by 50%. Monitor levels and renal function closely."
+  },
+  {
+    "drugA": "cyclosporine",
+    "drugB": "simvastatin",
+    "severity": "major",
+    "description": "Cyclosporine inhibits CYP3A4 and OATP1B1/1B3 transporters, greatly increasing simvastatin levels and myopathy/rhabdomyolysis risk.",
+    "recommendation": "Avoid combination. Use pravastatin or rosuvastatin at low doses if a statin is required."
+  },
+  {
+    "drugA": "allopurinol",
+    "drugB": "azathioprine",
+    "severity": "major",
+    "description": "Allopurinol inhibits xanthine oxidase, blocking azathioprine metabolism and raising levels to potentially fatal toxicity.",
+    "recommendation": "If combination is necessary, reduce azathioprine dose by 75%. Monitor CBC closely."
+  },
+  {
+    "drugA": "phenytoin",
+    "drugB": "fluconazole",
+    "severity": "major",
+    "description": "Fluconazole inhibits CYP2C9, markedly increasing phenytoin plasma levels and risk of toxicity (nystagmus, ataxia, confusion).",
+    "recommendation": "Monitor phenytoin levels closely. Reduce phenytoin dose if toxicity develops."
+  },
+  {
+    "drugA": "carbamazepine",
+    "drugB": "erythromycin",
+    "severity": "major",
+    "description": "Erythromycin inhibits CYP3A4, raising carbamazepine levels and risk of toxicity (diplopia, ataxia, nausea).",
+    "recommendation": "Monitor carbamazepine levels closely; use an alternative antibiotic if possible."
+  },
+  {
+    "drugA": "insulin",
+    "drugB": "alcohol",
+    "severity": "moderate",
+    "description": "Alcohol inhibits gluconeogenesis and masks hypoglycaemia symptoms, increasing risk of severe unrecognised hypoglycaemia.",
+    "recommendation": "Advise patient to eat before drinking and monitor blood glucose frequently."
+  },
+  {
+    "drugA": "glipizide",
+    "drugB": "fluconazole",
+    "severity": "moderate",
+    "description": "Fluconazole inhibits CYP2C9, increasing glipizide levels and risk of severe hypoglycaemia.",
+    "recommendation": "Monitor blood glucose closely and reduce glipizide dose if needed."
+  },
+  {
+    "drugA": "doxycycline",
+    "drugB": "antacid",
+    "severity": "moderate",
+    "description": "Antacids containing aluminium, calcium, or magnesium chelate doxycycline, reducing its absorption by up to 80%.",
+    "recommendation": "Separate doxycycline from antacids by at least 2–3 hours."
+  },
+  {
+    "drugA": "ciprofloxacin",
+    "drugB": "antacid",
+    "severity": "moderate",
+    "description": "Polyvalent cations in antacids form insoluble chelates with ciprofloxacin, dramatically reducing bioavailability.",
+    "recommendation": "Take ciprofloxacin 2 hours before or 6 hours after antacids or mineral supplements."
+  },
+  {
+    "drugA": "atorvastatin",
+    "drugB": "amiodarone",
+    "severity": "moderate",
+    "description": "Amiodarone inhibits CYP3A4 and P-glycoprotein, increasing atorvastatin exposure and myopathy risk.",
+    "recommendation": "Use the lowest effective atorvastatin dose. Monitor for muscle pain or weakness."
+  },
+  {
+    "drugA": "rosuvastatin",
+    "drugB": "gemfibrozil",
+    "severity": "major",
+    "description": "Gemfibrozil inhibits OATP1B1 and glucuronidation of rosuvastatin, raising AUC by up to 4× and myopathy risk.",
+    "recommendation": "Avoid combination. If necessary, limit rosuvastatin to 10 mg/day."
+  },
+  {
+    "drugA": "prednisone",
+    "drugB": "ibuprofen",
+    "severity": "moderate",
+    "description": "Combination of corticosteroid and NSAID substantially increases the risk of GI ulceration and bleeding.",
+    "recommendation": "Use a proton pump inhibitor for gastric protection. Prefer acetaminophen for analgesia."
+  },
+  {
+    "drugA": "furosemide",
+    "drugB": "gentamicin",
+    "severity": "major",
+    "description": "Both drugs are ototoxic; combination increases the risk of irreversible hearing loss and vestibular damage.",
+    "recommendation": "Avoid concurrent use. If necessary, use the lowest effective doses and monitor hearing."
+  },
+  {
+    "drugA": "acetaminophen",
+    "drugB": "alcohol",
+    "severity": "moderate",
+    "description": "Chronic alcohol use induces CYP2E1, converting more acetaminophen to a hepatotoxic metabolite (NAPQI), increasing liver damage risk.",
+    "recommendation": "Limit acetaminophen to ≤2 g/day in regular alcohol drinkers. Avoid entirely in heavy drinkers."
+  }
+]
