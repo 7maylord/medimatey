@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Outfit } from "next/font/google";
 import "./globals.css";
+import ServiceWorkerRegistration from "@/components/ServiceWorkerRegistration";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -56,6 +57,7 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col bg-background text-foreground">
+        <ServiceWorkerRegistration />
         {children}
       </body>
     </html>
