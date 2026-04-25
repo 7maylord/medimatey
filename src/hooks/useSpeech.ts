@@ -2,6 +2,31 @@
 
 import { useState, useRef, useCallback, useEffect } from "react";
 
+// Web Speech API types (not in default TS DOM lib)
+interface SpeechRecognitionEvent extends Event {
+  results: SpeechRecognitionResultList;
+}
+interface ISpeechRecognition extends EventTarget {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  start(): void;
+  stop(): void;
+  onstart: (() => void) | null;
+  onend: (() => void) | null;
+  onerror: (() => void) | null;
+  onresult: ((event: SpeechRecognitionEvent) => void) | null;
+}
+type SpeechRecognitionConstructor = new () => ISpeechRecognition;
+
+function getSpeechRecognition(): SpeechRecognitionConstructor | undefined {
+  if (typeof window === "undefined") return undefined;
+  return (
+    (window as unknown as { SpeechRecognition?: SpeechRecognitionConstructor }).SpeechRecognition ??
+    (window as unknown as { webkitSpeechRecognition?: SpeechRecognitionConstructor }).webkitSpeechRecognition
+  );
+}
+
 interface UseSpeechReturn {
   isListening: boolean;
   isSpeaking: boolean;
@@ -20,12 +45,10 @@ export function useSpeech(): UseSpeechReturn {
   const [transcript, setTranscript] = useState("");
   const [isSupported, setIsSupported] = useState(false);
 
-  const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const recognitionRef = useRef<ISpeechRecognition | null>(null);
 
   useEffect(() => {
-    const SpeechRecognition =
-      window.SpeechRecognition ?? (window as unknown as { webkitSpeechRecognition?: typeof window.SpeechRecognition }).webkitSpeechRecognition;
-    setIsSupported(Boolean(SpeechRecognition) && "speechSynthesis" in window);
+    setIsSupported(Boolean(getSpeechRecognition()) && "speechSynthesis" in window);
   }, []);
 
   const stopListening = useCallback(() => {
@@ -37,14 +60,12 @@ export function useSpeech(): UseSpeechReturn {
   }, []);
 
   const startListening = useCallback(() => {
-    const SpeechRecognition =
-      window.SpeechRecognition ?? (window as unknown as { webkitSpeechRecognition?: typeof window.SpeechRecognition }).webkitSpeechRecognition;
-
-    if (!SpeechRecognition) return;
+    const SR = getSpeechRecognition();
+    if (!SR) return;
 
     stopListening();
 
-    const recognition = new SpeechRecognition();
+    const recognition = new SR();
     recognition.continuous = true;
     recognition.interimResults = true;
     recognition.lang = "en-US";

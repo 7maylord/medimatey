@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -59,8 +60,18 @@ const navItems = [
   { href: "/journal", label: "Journal", icon: BookIcon },
 ];
 
+interface AIStatus { isConnected: boolean; backend: "ollama" | "google-ai" | null; }
+
 export default function Sidebar() {
   const pathname = usePathname();
+  const [aiStatus, setAiStatus] = useState<AIStatus>({ isConnected: false, backend: null });
+
+  useEffect(() => {
+    fetch("/api/ai-status")
+      .then((r) => r.json())
+      .then((d) => setAiStatus({ isConnected: d.isConnected, backend: d.backend }))
+      .catch(() => {});
+  }, []);
 
   return (
     <>
@@ -107,10 +118,14 @@ export default function Sidebar() {
         {/* AI Status */}
         <div className="glass-card p-3 mt-4">
           <div className="flex items-center gap-2 mb-1">
-            <div className="w-2 h-2 rounded-full bg-[var(--med-emerald-500)] animate-pulse" />
+            <div className={`w-2 h-2 rounded-full ${aiStatus.isConnected ? "bg-[var(--med-emerald-500)] animate-pulse" : "bg-[var(--med-slate-400)]"}`} />
             <span className="text-xs font-semibold">AI Status</span>
           </div>
-          <p className="text-xs text-foreground-muted">Gemma 4 · Ready</p>
+          <p className="text-xs text-foreground-muted">
+            {aiStatus.isConnected
+              ? aiStatus.backend === "ollama" ? "Gemma 4 · Local" : "Gemma 4 · Cloud"
+              : "No backend connected"}
+          </p>
         </div>
       </aside>
 

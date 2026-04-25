@@ -1,7 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
+import { useMedications, useTodaySchedule } from "@/hooks/useStorage";
+import { useAI } from "@/hooks/useAI";
+import { checkInteractions } from "@/lib/drug-data";
 
 // --- Icons ---
 function CameraIcon({ className = "" }: { className?: string }) {
@@ -80,114 +83,78 @@ function PlusIcon({ className = "" }: { className?: string }) {
   );
 }
 
-// --- Mock Data ---
-
-const mockSchedule = [
-  { id: "1", time: "8:00 AM", label: "Morning", med: "Metformin 500mg", taken: true, color: "var(--med-teal-500)" },
-  { id: "2", time: "8:00 AM", label: "Morning", med: "Lisinopril 10mg", taken: true, color: "var(--med-indigo-500)" },
-  { id: "3", time: "12:00 PM", label: "Afternoon", med: "Aspirin 81mg", taken: false, color: "var(--med-amber-500)" },
-  { id: "4", time: "6:00 PM", label: "Evening", med: "Metformin 500mg", taken: false, color: "var(--med-teal-500)" },
-  { id: "5", time: "10:00 PM", label: "Bedtime", med: "Atorvastatin 20mg", taken: false, color: "var(--med-coral-500)" },
+const MED_COLORS = [
+  "var(--med-teal-500)",
+  "var(--med-indigo-500)",
+  "var(--med-amber-500)",
+  "var(--med-coral-500)",
+  "var(--med-emerald-500)",
 ];
-
-const mockMedications = [
-  { name: "Metformin", dosage: "500mg", form: "Tablet", color: "var(--med-teal-500)" },
-  { name: "Lisinopril", dosage: "10mg", form: "Tablet", color: "var(--med-indigo-500)" },
-  { name: "Aspirin", dosage: "81mg", form: "Tablet", color: "var(--med-amber-500)" },
-  { name: "Atorvastatin", dosage: "20mg", form: "Tablet", color: "var(--med-coral-500)" },
-];
-
-const mockInteractions = [
-  {
-    drugA: "Aspirin",
-    drugB: "Lisinopril",
-    severity: "moderate" as const,
-    description: "Aspirin may reduce the blood pressure-lowering effect of Lisinopril.",
-  },
-];
-
-// --- Quick Action Cards ---
 
 const quickActions = [
-  {
-    href: "/scan",
-    icon: CameraIcon,
-    title: "Scan a Pill",
-    description: "Use your camera to identify medications",
-    gradient: "from-[var(--med-teal-500)] to-[var(--med-teal-700)]",
-    shadowColor: "rgba(13,148,136,0.3)",
-  },
-  {
-    href: "/journal",
-    icon: MicIcon,
-    title: "Voice Check-in",
-    description: "Log how you're feeling today",
-    gradient: "from-[var(--med-indigo-400)] to-[var(--med-indigo-600)]",
-    shadowColor: "rgba(99,102,241,0.3)",
-  },
-  {
-    href: "/schedule",
-    icon: CalendarIcon,
-    title: "View Schedule",
-    description: "See today's full medication plan",
-    gradient: "from-[var(--med-amber-400)] to-[var(--med-amber-600)]",
-    shadowColor: "rgba(245,158,11,0.3)",
-  },
+  { href: "/scan",     icon: CameraIcon,   title: "Scan a Pill",      description: "Identify medications with camera", gradient: "from-[var(--med-teal-500)] to-[var(--med-teal-700)]",    shadow: "rgba(13,148,136,0.3)" },
+  { href: "/journal",  icon: MicIcon,      title: "Voice Check-in",   description: "Log how you're feeling today",      gradient: "from-[var(--med-indigo-400)] to-[var(--med-indigo-600)]", shadow: "rgba(99,102,241,0.3)" },
+  { href: "/schedule", icon: CalendarIcon, title: "View Schedule",    description: "See today's full medication plan",  gradient: "from-[var(--med-amber-400)] to-[var(--med-amber-600)]",  shadow: "rgba(245,158,11,0.3)" },
 ];
 
-// --- Component ---
-
 export default function DashboardPage() {
-  const [mounted, setMounted] = useState(false);
   const [currentTime, setCurrentTime] = useState("");
 
+  const { medications } = useMedications();
+  const { entries: scheduleEntries, markTaken } = useTodaySchedule();
+  const { isConnected, backend } = useAI();
+
+  // Derive interactions synchronously — no effect needed
+  const interactions = useMemo(
+    () => medications.length >= 2
+      ? checkInteractions(medications.map((m) => m.name)).interactions
+      : [],
+    [medications]
+  );
+
+  // Live clock
   useEffect(() => {
-    setMounted(true);
-    const updateTime = () => {
-      const now = new Date();
-      setCurrentTime(
-        now.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true })
-      );
+    const update = () => {
+      setCurrentTime(new Date().toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true }));
     };
-    updateTime();
-    const interval = setInterval(updateTime, 60000);
-    return () => clearInterval(interval);
+    update();
+    const id = setInterval(update, 60000);
+    return () => clearInterval(id);
   }, []);
 
-  const takenCount = mockSchedule.filter((s) => s.taken).length;
-  const totalCount = mockSchedule.length;
-  const completionPct = Math.round((takenCount / totalCount) * 100);
+  const takenCount = scheduleEntries.filter((e) => e.taken).length;
+  const totalCount = scheduleEntries.length;
+  const completionPct = totalCount > 0 ? Math.round((takenCount / totalCount) * 100) : 0;
 
   const greeting = () => {
-    const hour = new Date().getHours();
-    if (hour < 12) return "Good Morning";
-    if (hour < 17) return "Good Afternoon";
+    const h = new Date().getHours();
+    if (h < 12) return "Good Morning";
+    if (h < 17) return "Good Afternoon";
     return "Good Evening";
   };
 
   return (
     <div className="p-6 md:p-8 max-w-6xl mx-auto gradient-mesh min-h-screen">
       {/* Header */}
-      <div
-        className={`mb-8 transition-all duration-700 ${
-          mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
-        }`}
-      >
+      <div className="mb-8">
         <h1 className="text-3xl md:text-4xl font-bold font-[family-name:var(--font-outfit)] mb-1">
           {greeting()} 👋
         </h1>
         <p className="text-foreground-muted">
           {currentTime && <span className="mr-2">{currentTime} ·</span>}
-          {takenCount} of {totalCount} medications taken today
+          {totalCount > 0
+            ? `${takenCount} of ${totalCount} medications taken today`
+            : "No medications scheduled yet"}
+          {isConnected && (
+            <span className="ml-2 text-xs text-[var(--med-teal-500)]">
+              · AI: {backend === "ollama" ? "Ollama (local)" : "Google AI"}
+            </span>
+          )}
         </p>
       </div>
 
       {/* Quick Actions */}
-      <div
-        className={`grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8 transition-all duration-700 delay-100 ${
-          mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
-        }`}
-      >
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
         {quickActions.map((action, i) => (
           <Link
             key={i}
@@ -196,7 +163,7 @@ export default function DashboardPage() {
           >
             <div
               className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${action.gradient} flex items-center justify-center flex-shrink-0 shadow-lg group-hover:scale-110 transition-transform`}
-              style={{ boxShadow: `0 4px 16px ${action.shadowColor}` }}
+              style={{ boxShadow: `0 4px 16px ${action.shadow}` }}
             >
               <action.icon className="w-6 h-6 text-white" />
             </div>
@@ -209,17 +176,11 @@ export default function DashboardPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Today's Schedule — Main Column */}
-        <div
-          className={`lg:col-span-2 glass-card-strong p-6 transition-all duration-700 delay-200 ${
-            mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
-          }`}
-        >
+        {/* Today's Schedule */}
+        <div className="lg:col-span-2 glass-card-strong p-6">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h2 className="text-lg font-bold font-[family-name:var(--font-outfit)]">
-                Today&apos;s Schedule
-              </h2>
+              <h2 className="text-lg font-bold font-[family-name:var(--font-outfit)]">Today&apos;s Schedule</h2>
               <p className="text-sm text-foreground-muted">
                 {new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
               </p>
@@ -231,153 +192,125 @@ export default function DashboardPage() {
                 </div>
                 <div className="text-xs text-foreground-muted">complete</div>
               </div>
-              {/* Circular progress */}
               <div className="w-12 h-12 relative">
                 <svg viewBox="0 0 36 36" className="w-full h-full -rotate-90">
-                  <path
-                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                    fill="none"
-                    stroke="var(--card-border)"
-                    strokeWidth="3"
-                  />
-                  <path
-                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                    fill="none"
-                    stroke="var(--med-teal-500)"
-                    strokeWidth="3"
-                    strokeDasharray={`${completionPct}, 100`}
-                    strokeLinecap="round"
-                    className="transition-all duration-1000"
-                  />
+                  <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="var(--card-border)" strokeWidth="3" />
+                  <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="var(--med-teal-500)" strokeWidth="3" strokeDasharray={`${completionPct}, 100`} strokeLinecap="round" className="transition-all duration-1000" />
                 </svg>
               </div>
             </div>
           </div>
 
-          {/* Timeline */}
-          <div className="space-y-3">
-            {mockSchedule.map((entry, i) => (
-              <div
-                key={entry.id}
-                className={`flex items-center gap-4 p-4 rounded-xl transition-all duration-300 cursor-pointer group ${
-                  entry.taken
-                    ? "bg-[var(--med-emerald-500)]/5 border border-[var(--med-emerald-500)]/20"
-                    : "glass-card hover:border-[var(--med-teal-500)]/30"
-                }`}
-                style={{ animationDelay: `${i * 50}ms` }}
-              >
-                {/* Time */}
-                <div className="w-20 flex-shrink-0 text-right">
-                  <div className="text-sm font-semibold">{entry.time}</div>
-                  <div className="text-xs text-foreground-muted">{entry.label}</div>
-                </div>
-
-                {/* Timeline line */}
-                <div className="flex flex-col items-center gap-1">
-                  <div
-                    className={`w-3 h-3 rounded-full border-2 transition-all ${
-                      entry.taken
-                        ? "bg-[var(--med-emerald-500)] border-[var(--med-emerald-500)]"
-                        : "border-[var(--med-slate-400)] group-hover:border-[var(--med-teal-500)]"
-                    }`}
-                  />
-                </div>
-
-                {/* Med info */}
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <div
-                      className="w-2 h-2 rounded-full flex-shrink-0"
-                      style={{ backgroundColor: entry.color }}
-                    />
+          {scheduleEntries.length === 0 ? (
+            <div className="text-center py-8 text-foreground-muted text-sm">
+              No medications scheduled today.{" "}
+              <Link href="/scan" className="text-[var(--med-teal-500)] hover:underline">Scan a pill bottle</Link> to get started.
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {scheduleEntries.map((entry) => (
+                <div
+                  key={entry.id}
+                  onClick={() => !entry.taken && markTaken(entry.id)}
+                  className={`flex items-center gap-4 p-4 rounded-xl transition-all duration-300 cursor-pointer group ${
+                    entry.taken
+                      ? "bg-[var(--med-emerald-500)]/5 border border-[var(--med-emerald-500)]/20"
+                      : "glass-card hover:border-[var(--med-teal-500)]/30"
+                  }`}
+                >
+                  <div className="w-20 flex-shrink-0 text-right">
+                    <div className="text-sm font-semibold">{entry.scheduledTime}</div>
+                    <div className="text-xs text-foreground-muted capitalize">{entry.timeLabel}</div>
+                  </div>
+                  <div className={`w-3 h-3 rounded-full border-2 transition-all flex-shrink-0 ${
+                    entry.taken
+                      ? "bg-[var(--med-emerald-500)] border-[var(--med-emerald-500)]"
+                      : "border-[var(--med-slate-400)] group-hover:border-[var(--med-teal-500)]"
+                  }`} />
+                  <div className="flex-1 min-w-0">
                     <span className={`text-sm font-medium ${entry.taken ? "line-through text-foreground-muted" : ""}`}>
-                      {entry.med}
+                      {entry.medicationName} {entry.dosage}
                     </span>
                   </div>
+                  <div className="flex-shrink-0">
+                    {entry.taken
+                      ? <CheckCircleIcon className="w-5 h-5 text-[var(--med-emerald-500)]" />
+                      : <ClockIcon className="w-5 h-5 text-foreground-muted group-hover:text-[var(--med-teal-500)] transition-colors" />
+                    }
+                  </div>
                 </div>
-
-                {/* Status */}
-                <div className="flex-shrink-0">
-                  {entry.taken ? (
-                    <CheckCircleIcon className="w-5 h-5 text-[var(--med-emerald-500)]" />
-                  ) : (
-                    <ClockIcon className="w-5 h-5 text-foreground-muted group-hover:text-[var(--med-teal-500)] transition-colors" />
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Right Column */}
         <div className="space-y-6">
           {/* Medications */}
-          <div
-            className={`glass-card-strong p-6 transition-all duration-700 delay-300 ${
-              mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
-            }`}
-          >
+          <div className="glass-card-strong p-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-bold font-[family-name:var(--font-outfit)]">
-                My Medications
-              </h2>
+              <h2 className="text-lg font-bold font-[family-name:var(--font-outfit)]">My Medications</h2>
               <Link href="/scan" className="btn-icon w-8 h-8">
                 <PlusIcon className="w-4 h-4" />
               </Link>
             </div>
-            <div className="space-y-3">
-              {mockMedications.map((med, i) => (
-                <div key={i} className="flex items-center gap-3 p-3 rounded-xl glass-card">
-                  <div
-                    className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-                    style={{ backgroundColor: `${med.color}20` }}
-                  >
-                    <PillIcon className="w-5 h-5" style={{ color: med.color }} />
-                  </div>
-                  <div>
-                    <div className="text-sm font-semibold">{med.name}</div>
-                    <div className="text-xs text-foreground-muted">
-                      {med.dosage} · {med.form}
+
+            {medications.length === 0 ? (
+              <p className="text-sm text-foreground-muted text-center py-4">
+                No medications yet.{" "}
+                <Link href="/scan" className="text-[var(--med-teal-500)] hover:underline">Add one</Link>
+              </p>
+            ) : (
+              <div className="space-y-3">
+                {medications.slice(0, 5).map((med, i) => (
+                  <div key={med.id} className="flex items-center gap-3 p-3 rounded-xl glass-card">
+                    <div
+                      className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                      style={{ backgroundColor: `${MED_COLORS[i % MED_COLORS.length]}20` }}
+                    >
+                      <PillIcon className="w-5 h-5" style={{ color: MED_COLORS[i % MED_COLORS.length] }} />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="text-sm font-semibold truncate">{med.name}</div>
+                      <div className="text-xs text-foreground-muted">{med.dosage} · {med.form}</div>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+                {medications.length > 5 && (
+                  <p className="text-xs text-foreground-muted text-center">+{medications.length - 5} more</p>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Interaction Warnings */}
-          {mockInteractions.length > 0 && (
-            <div
-              className={`glass-card-strong p-6 border-l-4 border-l-[var(--med-amber-500)] transition-all duration-700 delay-[400ms] ${
-                mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
-              }`}
-            >
+          {interactions.length > 0 && (
+            <div className="glass-card-strong p-6 border-l-4 border-l-[var(--med-amber-500)]">
               <div className="flex items-center gap-2 mb-3">
                 <AlertTriangleIcon className="w-5 h-5 text-[var(--med-amber-500)]" />
-                <h2 className="text-sm font-bold">Interaction Warning</h2>
+                <h2 className="text-sm font-bold">Interaction Warning{interactions.length > 1 ? "s" : ""}</h2>
               </div>
-              {mockInteractions.map((interaction, i) => (
-                <div key={i} className="text-sm">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="badge badge-warning">
-                      {interaction.severity}
-                    </span>
+              <div className="space-y-3">
+                {interactions.slice(0, 2).map((interaction, i) => (
+                  <div key={i} className="text-sm">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="badge badge-warning capitalize">{interaction.severity}</span>
+                    </div>
+                    <p className="text-foreground-muted text-xs leading-relaxed">
+                      <strong>{interaction.drugA}</strong> + <strong>{interaction.drugB}</strong>: {interaction.description}
+                    </p>
                   </div>
-                  <p className="text-foreground-muted text-xs leading-relaxed">
-                    <strong>{interaction.drugA}</strong> + <strong>{interaction.drugB}</strong>:{" "}
-                    {interaction.description}
-                  </p>
-                </div>
-              ))}
+                ))}
+                {interactions.length > 2 && (
+                  <p className="text-xs text-foreground-muted">+{interactions.length - 2} more interactions</p>
+                )}
+              </div>
             </div>
           )}
 
-          {/* Safety Disclaimer */}
+          {/* Disclaimer */}
           <div className="glass-card p-4 text-xs text-foreground-muted leading-relaxed">
-            <p>
-              ⚕️ <strong>Not medical advice.</strong> Always consult your healthcare provider before
-              making changes to your medications.
-            </p>
+            ⚕️ <strong>Not medical advice.</strong> Always consult your healthcare provider before making changes to your medications.
           </div>
         </div>
       </div>
