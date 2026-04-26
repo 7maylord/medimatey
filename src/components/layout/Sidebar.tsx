@@ -53,11 +53,37 @@ function HeartPulseIcon({ className = "" }: { className?: string }) {
   );
 }
 
+function FileTextIcon({ className = "" }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+      <polyline points="14 2 14 8 20 8" />
+      <line x1="16" y1="13" x2="8" y2="13" />
+      <line x1="16" y1="17" x2="8" y2="17" />
+      <polyline points="10 9 9 9 8 9" />
+    </svg>
+  );
+}
+
+function SettingsIcon({ className = "" }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="3" />
+      <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" />
+    </svg>
+  );
+}
+
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: HomeIcon },
-  { href: "/scan", label: "Scan Pill", icon: CameraIcon },
-  { href: "/schedule", label: "Schedule", icon: CalendarIcon },
-  { href: "/journal", label: "Journal", icon: BookIcon },
+  { href: "/scan",      label: "Scan Pill",  icon: CameraIcon },
+  { href: "/schedule",  label: "Schedule",   icon: CalendarIcon },
+  { href: "/journal",   label: "Journal",    icon: BookIcon },
+  { href: "/report",    label: "Report",     icon: FileTextIcon },
+];
+
+const bottomItems = [
+  { href: "/settings", label: "Settings", icon: SettingsIcon },
 ];
 
 interface AIStatus { isConnected: boolean; backend: "ollama" | "google-ai" | null; }
@@ -115,8 +141,36 @@ export default function Sidebar() {
           })}
         </nav>
 
+        {/* Bottom nav (Settings) */}
+        <nav className="space-y-1 mb-2">
+          {bottomItems.map((item) => {
+            const isActive = pathname === item.href;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group ${
+                  isActive
+                    ? "bg-[var(--med-teal-500)]/10 text-[var(--med-teal-600)] dark:text-[var(--med-teal-400)]"
+                    : "text-foreground-muted hover:bg-[var(--card-bg)] hover:text-foreground"
+                }`}
+              >
+                <item.icon
+                  className={`w-5 h-5 transition-transform group-hover:scale-110 ${
+                    isActive ? "text-[var(--med-teal-500)]" : ""
+                  }`}
+                />
+                {item.label}
+                {isActive && (
+                  <div className="ml-auto w-1.5 h-1.5 rounded-full bg-[var(--med-teal-500)]" />
+                )}
+              </Link>
+            );
+          })}
+        </nav>
+
         {/* AI Status */}
-        <div className="glass-card p-3 mt-4">
+        <div className="glass-card p-3 mt-2">
           <div className="flex items-center gap-2 mb-1">
             <div className={`w-2 h-2 rounded-full ${aiStatus.isConnected ? "bg-[var(--med-emerald-500)] animate-pulse" : "bg-[var(--med-slate-400)]"}`} />
             <span className="text-xs font-semibold">AI Status</span>
