@@ -16,38 +16,44 @@ MediMate helps patients manage their medications safely and independently — wi
 ## Features
 
 ### Pill Bottle Scanner
+
 Point your camera at any pill bottle label. Gemma 4's multimodal vision reads the label and extracts the medication name, dosage, form, frequency, and instructions — then adds it directly to your medication list.
 
 ### Drug Interaction Checker
+
 Automatically checks every combination of your current medications against a curated dataset of 50+ known interactions. Alerts are color-coded by severity: minor, moderate, major, and contraindicated. Runs entirely offline — no API call required.
 
 ### Smart Schedule
+
 Generates a personalized daily medication timeline (morning / afternoon / evening / night). Mark doses as taken with a single tap. Listen to your schedule read aloud via the built-in voice assistant.
 
 ### Voice-First Symptom Journal
+
 Tap the microphone and speak naturally about how you're feeling. Gemma 4 summarizes your words into a structured journal entry with mood level and symptom severity scores — ready to share with your doctor.
 
 ### Doctor Report Export
+
 Generate a clean, printable PDF report of your medications, interaction alerts, and recent journal entries in one tap. Share it at your next appointment without needing an internet connection.
 
 ### Patient Profile & Settings
+
 Store your name, age, known allergies, medical conditions, and emergency contact — all locally on your device. Your name appears on the exported doctor report.
 
 ---
 
 ## Tech Stack
 
-| Layer | Technology |
-|---|---|
-| Framework | Next.js 16 (App Router) |
-| Language | TypeScript |
-| Styling | Tailwind CSS v4 |
-| AI — local | Gemma 4 via Ollama (`gemma4:e4b`) |
-| AI — cloud | Google AI Studio (Gemini API) |
-| Storage | IndexedDB (raw browser API, no library) |
-| Voice | Web Speech API (SpeechRecognition + SpeechSynthesis) |
-| Camera | `navigator.mediaDevices.getUserMedia` |
-| PWA | Next.js manifest + custom service worker |
+| Layer      | Technology                                           |
+| ---------- | ---------------------------------------------------- |
+| Framework  | Next.js 16 (App Router)                              |
+| Language   | TypeScript                                           |
+| Styling    | Tailwind CSS v4                                      |
+| AI — local | Gemma 4 via Ollama (`gemma4:e4b`)                    |
+| AI — cloud | Google AI Studio (Gemini API)                        |
+| Storage    | IndexedDB (raw browser API, no library)              |
+| Voice      | Web Speech API (SpeechRecognition + SpeechSynthesis) |
+| Camera     | `navigator.mediaDevices.getUserMedia`                |
+| PWA        | Next.js manifest + custom service worker             |
 
 ---
 
@@ -71,14 +77,15 @@ All AI responses stream in real time. The active backend is visible in the sideb
 ## Getting Started
 
 ### Prerequisites
+
 - Node.js 18+
 - [Ollama](https://ollama.com) installed and running (for local AI)
 
 ### 1. Clone and install
 
 ```bash
-git clone https://github.com/your-username/medimate.git
-cd medimate
+git clone https://github.com/7maylord/medimatey.git
+cd medimatey
 npm install
 ```
 
@@ -88,11 +95,11 @@ npm install
 cp .env.example .env.local
 ```
 
-| Variable | Description | Default |
-|---|---|---|
-| `OLLAMA_BASE_URL` | Ollama server URL | `http://localhost:11434` |
-| `OLLAMA_MODEL` | Model name | `gemma4:e4b` |
-| `GOOGLE_AI_API_KEY` | Google AI Studio key (optional fallback) | — |
+| Variable            | Description                              | Default                  |
+| ------------------- | ---------------------------------------- | ------------------------ |
+| `OLLAMA_BASE_URL`   | Ollama server URL                        | `http://localhost:11434` |
+| `OLLAMA_MODEL`      | Model name                               | `gemma4:e4b`             |
+| `GOOGLE_AI_API_KEY` | Google AI Studio key (optional fallback) | —                        |
 
 ### 3. Pull the Gemma 4 model
 

@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { useMedications, useTodaySchedule } from "@/hooks/useStorage";
 import { useAI } from "@/hooks/useAI";
+import { useReminders } from "@/hooks/useReminders";
 import { checkInteractions } from "@/lib/drug-data";
 
 // --- Icons ---
@@ -95,6 +96,15 @@ function FileTextIcon({ className = "" }: { className?: string }) {
   );
 }
 
+function BellIcon({ className = "" }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" />
+      <path d="M13.73 21a2 2 0 01-3.46 0" />
+    </svg>
+  );
+}
+
 const MED_COLORS = [
   "var(--med-teal-500)",
   "var(--med-indigo-500)",
@@ -116,6 +126,7 @@ export default function DashboardPage() {
   const { medications } = useMedications();
   const { entries: scheduleEntries, markTaken } = useTodaySchedule();
   const { isConnected, backend } = useAI();
+  const { enabled: remindersEnabled, supported: remindersSupported, permission, enable: enableReminders, disable: disableReminders } = useReminders();
 
   // Derive interactions synchronously — no effect needed
   const interactions = useMemo(
@@ -318,6 +329,38 @@ export default function DashboardPage() {
                   <p className="text-xs text-foreground-muted">+{interactions.length - 2} more interactions</p>
                 )}
               </div>
+            </div>
+          )}
+
+          {/* Reminders */}
+          {remindersSupported && (
+            <div className="glass-card-strong p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <BellIcon className={`w-4 h-4 ${remindersEnabled ? "text-med-teal-500" : "text-foreground-muted"}`} />
+                <span className="text-sm font-semibold">Dose Reminders</span>
+                {remindersEnabled && (
+                  <span className="ml-auto text-xs text-med-emerald-500 font-medium">On</span>
+                )}
+              </div>
+              {permission === "denied" ? (
+                <p className="text-xs text-foreground-muted">Notifications blocked by your browser. Enable them in browser settings.</p>
+              ) : remindersEnabled ? (
+                <p className="text-xs text-foreground-muted mb-3">You&apos;ll be notified when each dose is due today.</p>
+              ) : (
+                <p className="text-xs text-foreground-muted mb-3">Get a notification when each dose is due.</p>
+              )}
+              {permission !== "denied" && (
+                <button
+                  onClick={remindersEnabled ? disableReminders : enableReminders}
+                  className={`text-xs py-1.5 px-3 rounded-lg font-medium transition-all ${
+                    remindersEnabled
+                      ? "bg-(--med-coral-500)/10 text-med-coral-500 hover:bg-(--med-coral-500)/20"
+                      : "bg-(--med-teal-500)/10 text-med-teal-500 hover:bg-(--med-teal-500)/20"
+                  }`}
+                >
+                  {remindersEnabled ? "Turn Off" : "Enable Reminders"}
+                </button>
+              )}
             </div>
           )}
 
