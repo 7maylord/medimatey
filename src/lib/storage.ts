@@ -127,6 +127,11 @@ export async function getProfile(): Promise<UserProfile | undefined> {
   return all[0];
 }
 
+export async function getAllScheduleEntries(): Promise<ScheduleEntry[]> {
+  const db = await openDB();
+  return tx<ScheduleEntry[]>(db, "schedule", "readonly", (s) => s.getAll());
+}
+
 // --- Export all data (for doctor report) ---
 
 export async function exportAllData(): Promise<{

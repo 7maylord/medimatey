@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useMedications, useTodaySchedule } from "@/hooks/useStorage";
 import { useAI } from "@/hooks/useAI";
@@ -121,12 +122,20 @@ const quickActions = [
 ];
 
 export default function DashboardPage() {
+  const router = useRouter();
   const [currentTime, setCurrentTime] = useState("");
 
   const { medications } = useMedications();
   const { entries: scheduleEntries, markTaken } = useTodaySchedule();
   const { isConnected, backend } = useAI();
   const { enabled: remindersEnabled, supported: remindersSupported, permission, enable: enableReminders, disable: disableReminders } = useReminders();
+
+  // Redirect first-time users to onboarding
+  useEffect(() => {
+    if (localStorage.getItem("medimate-onboarded") === null) {
+      router.replace("/onboarding");
+    }
+  }, [router]);
 
   // Derive interactions synchronously — no effect needed
   const interactions = useMemo(
