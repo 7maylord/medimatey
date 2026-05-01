@@ -73,6 +73,14 @@ function FileTextIcon({ className = "" }: { className?: string }) {
   );
 }
 
+function ChatIcon({ className = "" }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
+    </svg>
+  );
+}
+
 function TrendingUpIcon({ className = "" }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -93,12 +101,22 @@ function SettingsIcon({ className = "" }: { className?: string }) {
 
 const navItems = [
   { href: "/dashboard",   label: "Dashboard",   icon: HomeIcon },
+  { href: "/chat",        label: "Ask AI",      icon: ChatIcon },
   { href: "/scan",        label: "Scan Pill",   icon: CameraIcon },
   { href: "/medications", label: "Medications", icon: PillListIcon },
   { href: "/schedule",    label: "Schedule",    icon: CalendarIcon },
   { href: "/adherence",   label: "Adherence",   icon: TrendingUpIcon },
   { href: "/journal",     label: "Journal",     icon: BookIcon },
   { href: "/report",      label: "Report",      icon: FileTextIcon },
+];
+
+// Mobile bottom nav — keep to 5 most-used items
+const mobileNavItems = [
+  { href: "/dashboard",   label: "Home",     icon: HomeIcon },
+  { href: "/chat",        label: "Ask AI",   icon: ChatIcon },
+  { href: "/scan",        label: "Scan",     icon: CameraIcon },
+  { href: "/schedule",    label: "Schedule", icon: CalendarIcon },
+  { href: "/journal",     label: "Journal",  icon: BookIcon },
 ];
 
 const bottomItems = [
@@ -205,7 +223,7 @@ export default function Sidebar() {
       {/* Mobile Bottom Navigation */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-sidebar-bg backdrop-blur-xl border-t border-[var(--card-border)] px-2 py-2 safe-area-inset-bottom">
         <div className="flex items-center justify-around">
-          {navItems.map((item) => {
+          {mobileNavItems.map((item) => {
             const isActive = pathname === item.href;
             return (
               <Link
