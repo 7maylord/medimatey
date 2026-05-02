@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useCamera } from "@/hooks/useCamera";
 import { useAI } from "@/hooks/useAI";
 import { useMedications } from "@/hooks/useStorage";
+import { parseFrequency, freqToTimeSlots, scheduleForToday } from "@/lib/schedule-utils";
 import type { Medication } from "@/types";
 
 // --- Icons ---
@@ -97,6 +98,7 @@ export default function ScanPage() {
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [result, setResult] = useState<ScanResultData | null>(null);
   const [aiError, setAiError] = useState<string | null>(null);
+  const [scheduledCount, setScheduledCount] = useState(0);
 
   const { videoRef, canvasRef, isStreaming, error: cameraError, startCamera, stopCamera, captureFrame, switchCamera } = useCamera();
   const { analyzePill, loading: aiLoading } = useAI();
@@ -137,14 +139,16 @@ export default function ScanPage() {
   const handleAddMedication = async () => {
     if (!result) return;
     const now = new Date().toISOString();
+    const frequency = parseFrequency(result.frequency);
+    const timeSlots = freqToTimeSlots(frequency);
     const med: Medication = {
       id: crypto.randomUUID(),
       name: result.name ?? "Unknown Medication",
       genericName: result.genericName,
       dosage: result.dosage ?? "",
       form: (result.form as Medication["form"]) ?? "other",
-      frequency: "once_daily",
-      timeSlots: [{ time: "08:00", label: "morning" }],
+      frequency,
+      timeSlots,
       instructions: result.instructions,
       warnings: result.warnings,
       imageData: capturedImage ?? undefined,
@@ -153,6 +157,8 @@ export default function ScanPage() {
       updatedAt: now,
     };
     await addMedication(med);
+    const count = await scheduleForToday(med);
+    setScheduledCount(count);
     setScanState("saved");
   };
 
@@ -161,6 +167,7 @@ export default function ScanPage() {
     setCapturedImage(null);
     setResult(null);
     setAiError(null);
+    setScheduledCount(0);
   };
 
   return (
@@ -344,15 +351,31 @@ export default function ScanPage() {
               <CheckIcon className="w-10 h-10 text-med-emerald-500" />
             </div>
             <h2 className="text-xl font-bold font-(family-name:--font-outfit) mb-2">Medication Saved!</h2>
-            <p className="text-foreground-muted mb-8">
+            <p className="text-foreground-muted mb-2">
               <strong>{result?.name}</strong> has been added to your medication list.
             </p>
-            <button onClick={reset} className="btn-primary px-8 py-3">
-              <span className="flex items-center gap-2">
-                <CameraIcon className="w-5 h-5" />
-                Scan Another
-              </span>
-            </button>
+            {scheduledCount > 0 ? (
+              <p className="text-sm text-med-teal-500 font-medium mb-8">
+                ✓ {scheduledCount} dose{scheduledCount !== 1 ? "s" : ""} added to today&apos;s schedule
+              </p>
+            ) : (
+              <p className="text-sm text-foreground-muted mb-8">
+                No doses scheduled today (as needed or no schedule needed).
+              </p>
+            )}
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <button onClick={reset} className="btn-primary px-8 py-3">
+                <span className="flex items-center gap-2">
+                  <CameraIcon className="w-5 h-5" />
+                  Scan Another
+                </span>
+              </button>
+              {scheduledCount > 0 && (
+                <a href="/schedule" className="btn-secondary px-8 py-3 flex items-center justify-center gap-2">
+                  View Schedule
+                </a>
+              )}
+            </div>
           </div>
         )}
       </div>
