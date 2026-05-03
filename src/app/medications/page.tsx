@@ -4,8 +4,24 @@ import { useState, useMemo } from "react";
 import Link from "next/link";
 import { useMedications } from "@/hooks/useStorage";
 import { saveMedication } from "@/lib/storage";
+import { scheduleForToday } from "@/lib/schedule-utils";
 import { checkInteractions } from "@/lib/drug-data";
 import type { Medication, MedicationFrequency } from "@/types";
+
+function blankMedication(): Medication {
+  const now = new Date().toISOString();
+  return {
+    id: crypto.randomUUID(),
+    name: "",
+    dosage: "",
+    form: "tablet",
+    frequency: "once_daily",
+    timeSlots: [{ time: "08:00", label: "morning" }],
+    startDate: now.split("T")[0],
+    addedAt: now,
+    updatedAt: now,
+  };
+}
 
 // ── Icons ──────────────────────────────────────────────────────────────────
 
@@ -197,7 +213,9 @@ export default function MedicationsPage() {
   );
 
   async function handleSave(updated: Medication) {
+    const isNew = !medications.some((m) => m.id === updated.id);
     await saveMedication(updated);
+    if (isNew) await scheduleForToday(updated);
     await refresh();
     setEditing(null);
   }
@@ -233,10 +251,19 @@ export default function MedicationsPage() {
             )}
           </p>
         </div>
-        <Link href="/scan" className="btn-primary flex items-center gap-2 text-sm py-2.5 px-4">
-          <PlusIcon className="w-4 h-4" />
-          Add via Scan
-        </Link>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setEditing(blankMedication())}
+            className="btn-secondary flex items-center gap-2 text-sm py-2.5 px-4"
+          >
+            <PlusIcon className="w-4 h-4" />
+            Add Manually
+          </button>
+          <Link href="/scan" className="btn-primary flex items-center gap-2 text-sm py-2.5 px-4">
+            <PlusIcon className="w-4 h-4" />
+            Scan Pill
+          </Link>
+        </div>
       </div>
 
       {/* Interaction banner */}
@@ -265,8 +292,20 @@ export default function MedicationsPage() {
             <PlusIcon className="w-8 h-8 text-(--med-teal-500)" />
           </div>
           <h3 className="font-semibold mb-2">No medications yet</h3>
-          <p className="text-foreground-muted text-sm mb-6">Scan a pill bottle to add your first medication.</p>
-          <Link href="/scan" className="btn-primary text-sm py-2.5 px-6">Scan a Pill Bottle</Link>
+          <p className="text-foreground-muted text-sm mb-6">Scan a pill bottle or enter details manually.</p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <button
+              onClick={() => setEditing(blankMedication())}
+              className="btn-secondary text-sm py-2.5 px-6 flex items-center justify-center gap-2"
+            >
+              <PlusIcon className="w-4 h-4" />
+              Add Manually
+            </button>
+            <Link href="/scan" className="btn-primary text-sm py-2.5 px-6 flex items-center justify-center gap-2">
+              <PlusIcon className="w-4 h-4" />
+              Scan a Pill Bottle
+            </Link>
+          </div>
         </div>
       )}
 
