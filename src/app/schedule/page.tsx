@@ -1,7 +1,9 @@
 "use client";
 
-import { useTodaySchedule } from "@/hooks/useStorage";
+import { useEffect, useRef } from "react";
+import { useTodaySchedule, useMedications } from "@/hooks/useStorage";
 import { useSpeech } from "@/hooks/useSpeech";
+import { scheduleForToday } from "@/lib/schedule-utils";
 
 // --- Icons ---
 function CheckIcon({ className = "" }: { className?: string }) {
@@ -69,8 +71,16 @@ const timeLabelMeta: Record<TimeLabel, { label: string; Icon: React.ComponentTyp
 };
 
 export default function SchedulePage() {
-  const { entries, loading, markTaken, markSkipped } = useTodaySchedule();
+  const { entries, loading, markTaken, markSkipped, refresh } = useTodaySchedule();
+  const { medications } = useMedications();
   const { speak, isSpeaking, isSupported: speechSupported } = useSpeech();
+  const generated = useRef(false);
+
+  useEffect(() => {
+    if (loading || entries.length > 0 || medications.length === 0 || generated.current) return;
+    generated.current = true;
+    Promise.all(medications.map((m) => scheduleForToday(m))).then(() => refresh());
+  }, [loading, entries.length, medications, refresh]);
 
   const takenCount = entries.filter((e) => e.taken).length;
   const totalCount = entries.length;
@@ -104,7 +114,7 @@ export default function SchedulePage() {
       <div className="mb-8">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold font-[family-name:var(--font-outfit)] mb-1">Medication Schedule</h1>
+            <h1 className="text-3xl font-bold font-(family-name:--font-outfit) mb-1">Medication Schedule</h1>
             <p className="text-foreground-muted">
               {new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" })}
             </p>
@@ -112,7 +122,7 @@ export default function SchedulePage() {
           {speechSupported && (
             <button
               onClick={readScheduleAloud}
-              className={`btn-icon ${isSpeaking ? "text-[var(--med-teal-500)]" : ""}`}
+              className={`btn-icon ${isSpeaking ? "text-med-teal-500" : ""}`}
               title="Read schedule aloud"
             >
               <VolumeIcon className="w-5 h-5" />
@@ -146,10 +156,24 @@ export default function SchedulePage() {
       {!loading && entries.length === 0 && (
         <div className="glass-card-strong p-12 text-center">
           <ClockIcon className="w-12 h-12 text-foreground-muted mx-auto mb-4" />
-          <h2 className="text-lg font-bold font-[family-name:var(--font-outfit)] mb-2">No medications scheduled</h2>
-          <p className="text-foreground-muted text-sm">
-            Scan a pill bottle or add medications to build your daily schedule.
-          </p>
+          {medications.length === 0 ? (
+            <>
+              <h2 className="text-lg font-bold font-(family-name:--font-outfit) mb-2">No medications configured</h2>
+              <p className="text-foreground-muted text-sm mb-4">
+                Scan a pill bottle or add medications manually to build your daily schedule.
+              </p>
+              <a href="/medications" className="btn-primary text-sm px-4 py-2 rounded-xl inline-block">
+                Add Medications
+              </a>
+            </>
+          ) : (
+            <>
+              <h2 className="text-lg font-bold font-(family-name:--font-outfit) mb-2">Building your schedule…</h2>
+              <p className="text-foreground-muted text-sm">
+                Generating today&apos;s doses from your saved medications.
+              </p>
+            </>
+          )}
         </div>
       )}
 

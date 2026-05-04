@@ -85,14 +85,10 @@ function PlusIcon({ className = "" }: { className?: string }) {
   );
 }
 
-function FileTextIcon({ className = "" }: { className?: string }) {
+function ChatIcon({ className = "" }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
-      <polyline points="14 2 14 8 20 8" />
-      <line x1="16" y1="13" x2="8" y2="13" />
-      <line x1="16" y1="17" x2="8" y2="17" />
-      <polyline points="10 9 9 9 8 9" />
+      <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
     </svg>
   );
 }
@@ -115,10 +111,10 @@ const MED_COLORS = [
 ];
 
 const quickActions = [
-  { href: "/scan",     icon: CameraIcon,    title: "Scan a Pill",      description: "Identify medications with camera",  gradient: "from-[var(--med-teal-500)] to-[var(--med-teal-700)]",    shadow: "rgba(13,148,136,0.3)" },
-  { href: "/journal",  icon: MicIcon,       title: "Voice Check-in",   description: "Log how you're feeling today",       gradient: "from-[var(--med-indigo-400)] to-[var(--med-indigo-600)]", shadow: "rgba(99,102,241,0.3)" },
-  { href: "/schedule", icon: CalendarIcon,  title: "View Schedule",    description: "See today's full medication plan",   gradient: "from-[var(--med-amber-400)] to-[var(--med-amber-600)]",  shadow: "rgba(245,158,11,0.3)" },
-  { href: "/report",   icon: FileTextIcon,  title: "Doctor Report",    description: "Export a PDF for your physician",    gradient: "from-[var(--med-coral-400)] to-[var(--med-coral-600)]",  shadow: "rgba(244,63,94,0.3)" },
+  { href: "/scan",     icon: CameraIcon,   title: "Scan a Pill",    description: "Identify medications with camera",  gradient: "from-[var(--med-teal-500)] to-[var(--med-teal-700)]",    shadow: "rgba(13,148,136,0.3)" },
+  { href: "/chat",     icon: ChatIcon,     title: "Ask AI",         description: "Ask Gemma 4 about your meds",       gradient: "from-[var(--med-indigo-400)] to-[var(--med-indigo-600)]", shadow: "rgba(99,102,241,0.3)" },
+  { href: "/schedule", icon: CalendarIcon, title: "View Schedule",  description: "See today's full medication plan",  gradient: "from-[var(--med-amber-400)] to-[var(--med-amber-600)]",  shadow: "rgba(245,158,11,0.3)" },
+  { href: "/journal",  icon: MicIcon,      title: "Voice Journal",  description: "Log how you're feeling today",      gradient: "from-[var(--med-coral-400)] to-[var(--med-coral-600)]",  shadow: "rgba(244,63,94,0.3)" },
 ];
 
 export default function DashboardPage() {
@@ -282,8 +278,10 @@ export default function DashboardPage() {
           {/* Medications */}
           <div className="glass-card-strong p-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-bold font-[family-name:var(--font-outfit)]">My Medications</h2>
-              <Link href="/scan" className="btn-icon w-8 h-8">
+              <Link href="/medications" className="text-lg font-bold font-(family-name:--font-outfit) hover:text-med-teal-500 transition-colors">
+                My Medications
+              </Link>
+              <Link href="/medications" className="btn-icon w-8 h-8">
                 <PlusIcon className="w-4 h-4" />
               </Link>
             </div>
@@ -291,7 +289,7 @@ export default function DashboardPage() {
             {medications.length === 0 ? (
               <p className="text-sm text-foreground-muted text-center py-4">
                 No medications yet.{" "}
-                <Link href="/scan" className="text-[var(--med-teal-500)] hover:underline">Add one</Link>
+                <Link href="/medications" className="text-med-teal-500 hover:underline">Add one</Link>
               </p>
             ) : (
               <div className="space-y-3">
