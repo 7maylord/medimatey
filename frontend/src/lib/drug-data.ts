@@ -1,5 +1,6 @@
 import rawInteractions from "@/data/interactions.json";
 import type { DrugInteraction, InteractionCheckResult, InteractionSeverity } from "@/types";
+import { toGeneric } from "@/lib/safety";
 
 interface RawInteraction {
   drugA: string;
@@ -11,8 +12,10 @@ interface RawInteraction {
 
 const interactions = rawInteractions as RawInteraction[];
 
+// Normalize to a generic name so a brand entry ("Coumadin") still matches the
+// dataset's generic ("warfarin").
 function normalise(name: string): string {
-  return name.toLowerCase().trim();
+  return toGeneric(name);
 }
 
 // Check whether two drug names match a known interaction entry
