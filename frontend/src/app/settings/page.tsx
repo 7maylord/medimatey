@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { getProfile, saveProfile } from "@/lib/storage";
+import { getProfile, saveProfile, exportBackup, importBackup } from "@/lib/storage";
 import type { UserProfile } from "@/types";
 
 const INPUT_CLS =
@@ -40,6 +40,34 @@ export default function SettingsPage() {
   });
   const [saved, setSaved] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const fileInput = useRef<HTMLInputElement | null>(null);
+  const [dataMsg, setDataMsg] = useState<string | null>(null);
+
+  async function handleExport() {
+    const backup = await exportBackup();
+    const blob = new Blob([JSON.stringify(backup, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `medimate-backup-${new Date().toISOString().split("T")[0]}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  async function handleImport(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = ""; // allow re-selecting the same file
+    if (!file) return;
+    if (!confirm("Restoring will REPLACE all current medications, schedule, and journal on this device. Continue?")) return;
+    try {
+      const data = JSON.parse(await file.text());
+      await importBackup(data);
+      setDataMsg("Backup restored. Reloading…");
+      setTimeout(() => window.location.reload(), 800);
+    } catch (err) {
+      setDataMsg(err instanceof Error ? err.message : "Import failed.");
+    }
+  }
 
   useEffect(() => {
     getProfile().then((p) => {
@@ -139,6 +167,25 @@ export default function SettingsPage() {
             <><SaveIcon className="w-4 h-4" />Save Profile</>
           )}
         </button>
+      </div>
+
+      {/* Backup & Restore */}
+      <div className="glass-card-strong p-6 mt-6 space-y-3">
+        <h2 className="text-base font-semibold">Backup &amp; Restore</h2>
+        <p className="text-xs text-foreground-muted leading-relaxed">
+          Your data lives only in this browser — clearing browser data erases it. Export a backup
+          file to keep a copy or move to another device, then restore it here.
+        </p>
+        <div className="flex flex-col sm:flex-row gap-3">
+          <button onClick={handleExport} className="btn-secondary text-sm py-2.5 px-5">
+            Export backup
+          </button>
+          <button onClick={() => fileInput.current?.click()} className="btn-secondary text-sm py-2.5 px-5">
+            Restore from file
+          </button>
+          <input ref={fileInput} type="file" accept="application/json,.json" className="hidden" onChange={handleImport} />
+        </div>
+        {dataMsg && <p className="text-xs text-med-teal-500 font-medium">{dataMsg}</p>}
       </div>
 
       <div className="glass-card p-4 mt-6 text-xs text-foreground-muted leading-relaxed">

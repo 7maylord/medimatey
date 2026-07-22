@@ -3,10 +3,11 @@
 import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { useMedications, useTodaySchedule } from "@/hooks/useStorage";
+import { useMedications, useTodaySchedule, useAllSchedule, useProfile } from "@/hooks/useStorage";
 import { useAI } from "@/hooks/useAI";
 import { useReminders } from "@/hooks/useReminders";
 import { checkInteractions } from "@/lib/drug-data";
+import { checkAllergyConflicts, pillsRemaining, daysRemaining, isLowSupply } from "@/lib/safety";
 
 // --- Icons ---
 function CameraIcon({ className = "" }: { className?: string }) {
@@ -123,6 +124,8 @@ export default function DashboardPage() {
 
   const { medications } = useMedications();
   const { entries: scheduleEntries, markTaken } = useTodaySchedule();
+  const { entries: allSchedule } = useAllSchedule();
+  const { profile } = useProfile();
   const { isConnected, backend } = useAI();
   const { enabled: remindersEnabled, supported: remindersSupported, permission, enable: enableReminders, disable: disableReminders } = useReminders();
 
@@ -139,6 +142,20 @@ export default function DashboardPage() {
       ? checkInteractions(medications.map((m) => m.name)).interactions
       : [],
     [medications]
+  );
+
+  const allergyWarnings = useMemo(
+    () => (profile?.allergies?.length
+      ? checkAllergyConflicts(medications.map((m) => m.name), profile.allergies)
+      : []),
+    [medications, profile]
+  );
+
+  const lowSupply = useMemo(
+    () => medications
+      .map((m) => ({ med: m, remaining: pillsRemaining(m, allSchedule) }))
+      .filter(({ med, remaining }) => isLowSupply(med, remaining)),
+    [medications, allSchedule]
   );
 
   // Live clock
@@ -314,6 +331,41 @@ export default function DashboardPage() {
             )}
           </div>
 
+          {/* Allergy Warnings */}
+          {allergyWarnings.length > 0 && (
+            <div className="glass-card-strong p-6 border-l-4 border-l-med-coral-500">
+              <div className="flex items-center gap-2 mb-3">
+                <AlertTriangleIcon className="w-5 h-5 text-med-coral-500" />
+                <h2 className="text-sm font-bold text-med-coral-500">Allergy Conflict{allergyWarnings.length > 1 ? "s" : ""}</h2>
+              </div>
+              <div className="space-y-2">
+                {allergyWarnings.slice(0, 3).map((w, i) => (
+                  <p key={i} className="text-xs text-foreground-muted leading-relaxed">
+                    <strong>{w.medName}</strong> may conflict with your allergy to <strong>{w.allergy}</strong>.
+                  </p>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Refill / Low Supply */}
+          {lowSupply.length > 0 && (
+            <div className="glass-card-strong p-6 border-l-4 border-l-med-amber-500">
+              <div className="flex items-center gap-2 mb-3">
+                <PillIcon className="w-5 h-5 text-med-amber-500" />
+                <h2 className="text-sm font-bold">Refill Soon</h2>
+              </div>
+              <div className="space-y-2">
+                {lowSupply.map(({ med, remaining }) => (
+                  <p key={med.id} className="text-xs text-foreground-muted">
+                    <strong>{med.name}</strong> — {remaining} left
+                    {(() => { const d = daysRemaining(med, remaining); return d != null ? ` (~${d} day${d !== 1 ? "s" : ""})` : ""; })()}
+                  </p>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Interaction Warnings */}
           {interactions.length > 0 && (
             <div className="glass-card-strong p-6 border-l-4 border-l-[var(--med-amber-500)]">
@@ -352,9 +404,9 @@ export default function DashboardPage() {
               {permission === "denied" ? (
                 <p className="text-xs text-foreground-muted">Notifications blocked by your browser. Enable them in browser settings.</p>
               ) : remindersEnabled ? (
-                <p className="text-xs text-foreground-muted mb-3">You&apos;ll be notified when each dose is due today.</p>
+                <p className="text-xs text-foreground-muted mb-3">You&apos;ll be reminded when each dose is due — tap <strong>Mark taken</strong> right from the notification. Works best with MediMate open or installed; a fully-closed phone may miss some.</p>
               ) : (
-                <p className="text-xs text-foreground-muted mb-3">Get a notification when each dose is due.</p>
+                <p className="text-xs text-foreground-muted mb-3">Get a private, on-device reminder when each dose is due. Works best with the app open or installed.</p>
               )}
               {permission !== "denied" && (
                 <button
