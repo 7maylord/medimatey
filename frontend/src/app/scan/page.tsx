@@ -1,10 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useCamera } from "@/hooks/useCamera";
 import { useAI } from "@/hooks/useAI";
-import { useMedications } from "@/hooks/useStorage";
+import { useMedications, useProfile } from "@/hooks/useStorage";
 import { parseFrequency, freqToTimeSlots, scheduleForToday } from "@/lib/schedule-utils";
+import { checkInteractions } from "@/lib/drug-data";
+import { checkAllergyConflicts, toGeneric } from "@/lib/safety";
 import type { Medication } from "@/types";
 
 // --- Icons ---
@@ -102,9 +104,23 @@ export default function ScanPage() {
 
   const { videoRef, canvasRef, isStreaming, error: cameraError, startCamera, stopCamera, captureFrame, switchCamera } = useCamera();
   const { analyzePill, loading: aiLoading } = useAI();
-  const { add: addMedication } = useMedications();
+  const { add: addMedication, medications } = useMedications();
+  const { profile } = useProfile();
 
   useEffect(() => () => stopCamera(), [stopCamera]);
+
+  // Safety check on the scanned drug before it's added: allergy conflicts + any
+  // interaction with medications already on the list.
+  const scanName = result?.name;
+  const safety = useMemo(() => {
+    if (!scanName) return { allergies: [] as { medName: string; allergy: string }[], interactions: [] as ReturnType<typeof checkInteractions>["interactions"] };
+    const allergies = profile?.allergies?.length ? checkAllergyConflicts([scanName], profile.allergies) : [];
+    const newGeneric = toGeneric(scanName);
+    const interactions = checkInteractions([scanName, ...medications.map((m) => m.name)]).interactions.filter(
+      (ix) => toGeneric(ix.drugA) === newGeneric || toGeneric(ix.drugB) === newGeneric
+    );
+    return { allergies, interactions };
+  }, [scanName, profile, medications]);
 
   const handleCapture = async () => {
     const dataUrl = captureFrame();
@@ -326,6 +342,24 @@ export default function ScanPage() {
                 </div>
               )}
             </div>
+
+            {/* Safety warnings before adding */}
+            {(safety.allergies.length > 0 || safety.interactions.length > 0) && (
+              <div className="glass-card p-4 border-l-4 border-l-med-coral-500 space-y-2">
+                <h3 className="text-sm font-semibold text-med-coral-500">⚠️ Check before adding</h3>
+                {safety.allergies.map((w, i) => (
+                  <p key={`a${i}`} className="text-xs text-foreground-muted">
+                    Conflicts with your stated allergy: <strong>{w.allergy}</strong>.
+                  </p>
+                ))}
+                {safety.interactions.map((ix, i) => (
+                  <p key={`i${i}`} className="text-xs text-foreground-muted">
+                    <span className="capitalize font-medium text-med-amber-500">{ix.severity}</span> interaction with <strong>{ix.drugA.toLowerCase() === toGeneric(scanName ?? "") ? ix.drugB : ix.drugA}</strong>: {ix.description}
+                  </p>
+                ))}
+                <p className="text-xs text-foreground-muted italic">Confirm with your prescriber before starting.</p>
+              </div>
+            )}
 
             <div className="flex flex-col sm:flex-row gap-3">
               <button onClick={handleAddMedication} className="btn-primary flex-1 py-3">

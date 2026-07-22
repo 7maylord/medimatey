@@ -2,10 +2,11 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
-import { useMedications } from "@/hooks/useStorage";
+import { useMedications, useAllSchedule, useProfile } from "@/hooks/useStorage";
 import { saveMedication } from "@/lib/storage";
 import { scheduleForToday } from "@/lib/schedule-utils";
 import { checkInteractions } from "@/lib/drug-data";
+import { checkAllergyConflicts, pillsRemaining, daysRemaining, isLowSupply } from "@/lib/safety";
 import type { Medication, MedicationFrequency } from "@/types";
 
 function blankMedication(): Medication {
@@ -111,6 +112,7 @@ function EditModal({ med, onSave, onClose }: EditModalProps) {
     startDate:    med.startDate,
     endDate:      med.endDate ?? "",
     instructions: med.instructions ?? "",
+    quantity:     med.quantity != null ? String(med.quantity) : "",
   });
 
   function field(key: keyof typeof form) {
@@ -120,6 +122,9 @@ function EditModal({ med, onSave, onClose }: EditModalProps) {
 
   function handleSave() {
     if (!form.name.trim() || !form.dosage.trim()) return;
+    const now = new Date().toISOString();
+    const quantity = form.quantity.trim() === "" ? undefined : Math.max(0, parseInt(form.quantity, 10) || 0);
+    const quantityChanged = quantity !== med.quantity;
     onSave({
       ...med,
       ...form,
@@ -127,7 +132,9 @@ function EditModal({ med, onSave, onClose }: EditModalProps) {
       prescribedBy: form.prescribedBy || undefined,
       endDate:      form.endDate      || undefined,
       instructions: form.instructions || undefined,
-      updatedAt: new Date().toISOString(),
+      quantity, // overrides the string form.quantity spread above
+      quantityUpdatedAt: quantityChanged ? now : med.quantityUpdatedAt,
+      updatedAt: now,
     });
   }
 
@@ -174,6 +181,10 @@ function EditModal({ med, onSave, onClose }: EditModalProps) {
               <input type="date" className={INPUT} value={form.endDate} onChange={field("endDate")} />
             </label>
             <label className="col-span-2 block">
+              <span className="text-xs font-medium text-foreground-muted mb-1 block">Pills on hand (for refill tracking)</span>
+              <input type="number" min="0" className={INPUT} value={form.quantity} onChange={field("quantity")} placeholder="e.g. 30 — leave blank to skip" />
+            </label>
+            <label className="col-span-2 block">
               <span className="text-xs font-medium text-foreground-muted mb-1 block">Prescribed By</span>
               <input className={INPUT} value={form.prescribedBy} onChange={field("prescribedBy")} placeholder="Doctor's name" />
             </label>
@@ -202,6 +213,8 @@ function EditModal({ med, onSave, onClose }: EditModalProps) {
 
 export default function MedicationsPage() {
   const { medications, remove, refresh } = useMedications();
+  const { entries: allSchedule } = useAllSchedule();
+  const { profile } = useProfile();
   const [editing, setEditing] = useState<Medication | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
 
@@ -210,6 +223,13 @@ export default function MedicationsPage() {
       ? checkInteractions(medications.map((m) => m.name)).interactions
       : [],
     [medications]
+  );
+
+  const allergyWarnings = useMemo(
+    () => (profile?.allergies?.length
+      ? checkAllergyConflicts(medications.map((m) => m.name), profile.allergies)
+      : []),
+    [medications, profile]
   );
 
   async function handleSave(updated: Medication) {
@@ -266,6 +286,21 @@ export default function MedicationsPage() {
         </div>
       </div>
 
+      {/* Allergy banner */}
+      {allergyWarnings.length > 0 && (
+        <div className="glass-card p-4 mb-6 border-l-4 border-l-med-coral-500 flex items-start gap-3">
+          <AlertIcon className="w-5 h-5 text-med-coral-500 shrink-0 mt-0.5" />
+          <div className="text-sm">
+            <p className="font-semibold mb-1 text-med-coral-500">Allergy Conflict{allergyWarnings.length > 1 ? "s" : ""}</p>
+            {allergyWarnings.map((w, i) => (
+              <p key={i} className="text-foreground-muted text-xs">
+                <span className="font-medium">{w.medName}</span> may conflict with your stated allergy: <span className="font-medium">{w.allergy}</span>. Confirm with your prescriber.
+              </p>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Interaction banner */}
       {interactions.length > 0 && (
         <div className="glass-card p-4 mb-6 border-l-4 border-l-[var(--med-amber-500)] flex items-start gap-3">
@@ -314,6 +349,9 @@ export default function MedicationsPage() {
         {medications.map((med, i) => {
           const color = MED_COLORS[i % MED_COLORS.length];
           const ixCount = interactionMap[med.name.toLowerCase()] ?? 0;
+          const remaining = pillsRemaining(med, allSchedule);
+          const daysLeft = daysRemaining(med, remaining);
+          const lowSupply = isLowSupply(med, remaining);
           return (
             <div key={med.id} className="glass-card-strong p-5 flex flex-col gap-4">
               {/* Top row */}
@@ -370,6 +408,11 @@ export default function MedicationsPage() {
 
               {/* Footer badges */}
               <div className="flex items-center gap-2 flex-wrap">
+                {remaining != null && (
+                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${lowSupply ? "bg-med-coral-500/10 text-med-coral-500" : "glass-card text-foreground-muted"}`}>
+                    {lowSupply ? "⚠ " : ""}{remaining} left{daysLeft != null ? ` · ~${daysLeft}d` : ""}
+                  </span>
+                )}
                 {med.prescribedBy && (
                   <span className="text-xs px-2 py-0.5 rounded-full glass-card text-foreground-muted">
                     Dr. {med.prescribedBy}
