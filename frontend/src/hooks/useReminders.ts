@@ -2,11 +2,30 @@
 
 import { useEffect, useRef, useState } from "react";
 import { getScheduleForDate } from "@/lib/storage";
+import type { ScheduleEntry } from "@/types";
 
 const PREF_KEY = "medimate-reminders-enabled";
 
 function todayISO() {
   return new Date().toISOString().split("T")[0];
+}
+
+// Show via the service worker so the notification can carry a "Mark taken" button
+// (plain Notification() can't). Falls back to a button-less notification if no SW.
+async function showDoseNotification(entry: ScheduleEntry) {
+  const title = "💊 Time to take your medication";
+  const options: NotificationOptions & { actions?: { action: string; title: string }[] } = {
+    body: `${entry.medicationName} — ${entry.dosage}`,
+    icon: "/icons/icon-192.png",
+    badge: "/icons/icon-192.png",
+    tag: entry.id,
+    data: { entryId: entry.id },
+    requireInteraction: true,
+    actions: [{ action: "taken", title: "✓ Mark taken" }],
+  };
+  const reg = await navigator.serviceWorker?.ready.catch(() => undefined);
+  if (reg) return reg.showNotification(title, options);
+  new Notification(title, options); // no action buttons in this path
 }
 
 export function useReminders() {
@@ -50,12 +69,7 @@ export function useReminders() {
 
       const id = setTimeout(() => {
         if (Notification.permission !== "granted") return;
-        new Notification("💊 Time to take your medication", {
-          body: `${entry.medicationName} — ${entry.dosage}`,
-          icon: "/icons/icon-192.png",
-          badge: "/icons/icon-192.png",
-          tag: entry.id,
-        });
+        showDoseNotification(entry);
       }, delay);
       timers.current.push(id);
     }
