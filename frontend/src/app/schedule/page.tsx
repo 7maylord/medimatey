@@ -1,9 +1,7 @@
 "use client";
 
-import { useEffect, useRef } from "react";
 import { useTodaySchedule, useMedications } from "@/hooks/useStorage";
 import { useSpeech } from "@/hooks/useSpeech";
-import { scheduleForToday } from "@/lib/schedule-utils";
 
 // --- Icons ---
 function CheckIcon({ className = "" }: { className?: string }) {
@@ -71,16 +69,9 @@ const timeLabelMeta: Record<TimeLabel, { label: string; Icon: React.ComponentTyp
 };
 
 export default function SchedulePage() {
-  const { entries, loading, markTaken, markSkipped, refresh } = useTodaySchedule();
+  const { entries, loading, markTaken, markSkipped } = useTodaySchedule();
   const { medications } = useMedications();
   const { speak, isSpeaking, isSupported: speechSupported } = useSpeech();
-  const generated = useRef(false);
-
-  useEffect(() => {
-    if (loading || entries.length > 0 || medications.length === 0 || generated.current) return;
-    generated.current = true;
-    Promise.all(medications.map((m) => scheduleForToday(m))).then(() => refresh());
-  }, [loading, entries.length, medications, refresh]);
 
   const takenCount = entries.filter((e) => e.taken).length;
   const totalCount = entries.length;
