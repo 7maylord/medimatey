@@ -1,4 +1,6 @@
-import type { Medication, ScheduleEntry, JournalEntry, UserProfile } from "@/types";
+import type { Medication, ScheduleEntry, JournalEntry, UserProfile, BackupData } from "@/types";
+
+const BACKUP_VERSION = 1;
 
 const DB_NAME = "medimate";
 const DB_VERSION = 1;
@@ -74,16 +76,7 @@ export async function saveScheduleEntry(entry: ScheduleEntry): Promise<void> {
 
 export async function getScheduleForDate(date: string): Promise<ScheduleEntry[]> {
   const db = await openDB();
-  return new Promise(async (resolve, reject) => {
-    const dbResolved = await openDB().catch(reject);
-    if (!dbResolved) return;
-    const transaction = dbResolved.transaction("schedule", "readonly");
-    const store = transaction.objectStore("schedule");
-    const index = store.index("date");
-    const request = index.getAll(date);
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error);
-  });
+  return tx<ScheduleEntry[]>(db, "schedule", "readonly", (s) => s.index("date").getAll(date));
 }
 
 export async function updateScheduleEntry(
@@ -145,4 +138,46 @@ export async function exportAllData(): Promise<{
     getProfile(),
   ]);
   return { medications, journal, profile };
+}
+
+// --- Full backup / restore (JSON, user-initiated) ---
+
+export async function exportBackup(): Promise<BackupData> {
+  const [medications, schedule, journal, profile] = await Promise.all([
+    getMedications(),
+    getAllScheduleEntries(),
+    getJournalEntries(),
+    getProfile(),
+  ]);
+  return { version: BACKUP_VERSION, exportedAt: new Date().toISOString(), medications, schedule, journal, profile };
+}
+
+function isBackup(data: unknown): data is BackupData {
+  const d = data as Partial<BackupData>;
+  return (
+    !!d &&
+    typeof d === "object" &&
+    Array.isArray(d.medications) &&
+    Array.isArray(d.schedule) &&
+    Array.isArray(d.journal)
+  );
+}
+
+async function clearStore(store: StoreName): Promise<void> {
+  const db = await openDB();
+  await tx(db, store, "readwrite", (s) => s.clear());
+}
+
+// Replaces all local data with the backup's contents. Throws on a malformed file.
+export async function importBackup(data: unknown): Promise<void> {
+  if (!isBackup(data)) throw new Error("Not a valid MediMate backup file.");
+
+  await Promise.all([clearStore("medications"), clearStore("schedule"), clearStore("journal"), clearStore("profile")]);
+
+  await Promise.all([
+    ...data.medications.map(saveMedication),
+    ...data.schedule.map(saveScheduleEntry),
+    ...data.journal.map(saveJournalEntry),
+    ...(data.profile ? [saveProfile(data.profile)] : []),
+  ]);
 }

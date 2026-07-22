@@ -51,6 +51,8 @@ export interface Medication {
   endDate?: string;  // ISO date
   color?: string;    // for UI identification
   imageData?: string; // base64 of scanned pill
+  quantity?: number;          // pills on hand as of quantityUpdatedAt
+  quantityUpdatedAt?: string; // ISO datetime the count was last set (refill)
   addedAt: string;   // ISO date
   updatedAt: string; // ISO date
 }
@@ -159,6 +161,17 @@ export interface ScanResult {
   rawText?: string;
   confidence?: number;
   error?: string;
+}
+
+// --- Backup / Restore ---
+
+export interface BackupData {
+  version: number;
+  exportedAt: string;
+  medications: Medication[];
+  schedule: ScheduleEntry[];
+  journal: JournalEntry[];
+  profile?: UserProfile;
 }
 
 // --- Doctor Report ---

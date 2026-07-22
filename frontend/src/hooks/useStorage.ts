@@ -1,18 +1,21 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import type { Medication, ScheduleEntry, JournalEntry } from "@/types";
+import type { Medication, ScheduleEntry, JournalEntry, UserProfile } from "@/types";
 import {
   getMedications,
   saveMedication,
   deleteMedication,
   getScheduleForDate,
+  getAllScheduleEntries,
   saveScheduleEntry,
   updateScheduleEntry,
   getJournalEntries,
   saveJournalEntry,
   deleteJournalEntry,
+  getProfile,
 } from "@/lib/storage";
+import { ensureScheduleForDate } from "@/lib/schedule-utils";
 
 function todayISO() {
   return new Date().toISOString().split("T")[0];
@@ -54,12 +57,24 @@ export function useTodaySchedule() {
 
   const refresh = useCallback(async () => {
     setLoading(true);
-    const data = await getScheduleForDate(todayISO());
+    const today = todayISO();
+    await ensureScheduleForDate(today); // idempotent: materializes missing doses for today
+    const data = await getScheduleForDate(today);
     setEntries(data.sort((a, b) => a.scheduledTime.localeCompare(b.scheduledTime)));
     setLoading(false);
   }, []);
 
   useEffect(() => { refresh(); }, [refresh]);
+
+  // The service worker posts this after "Mark taken" is tapped on a notification.
+  useEffect(() => {
+    if (typeof navigator === "undefined" || !navigator.serviceWorker) return;
+    const onMessage = (e: MessageEvent) => {
+      if (e.data?.type === "schedule-updated") refresh();
+    };
+    navigator.serviceWorker.addEventListener("message", onMessage);
+    return () => navigator.serviceWorker.removeEventListener("message", onMessage);
+  }, [refresh]);
 
   const markTaken = useCallback(async (id: string) => {
     await updateScheduleEntry(id, { taken: true, takenAt: new Date().toISOString(), skipped: false });
@@ -77,6 +92,34 @@ export function useTodaySchedule() {
   }, [refresh]);
 
   return { entries, loading, markTaken, markSkipped, addEntry, refresh };
+}
+
+// --- All schedule entries (for refill math / adherence) ---
+
+export function useAllSchedule() {
+  const [entries, setEntries] = useState<ScheduleEntry[]>([]);
+
+  const refresh = useCallback(async () => {
+    setEntries(await getAllScheduleEntries());
+  }, []);
+
+  useEffect(() => { refresh(); }, [refresh]);
+
+  return { entries, refresh };
+}
+
+// --- Patient profile ---
+
+export function useProfile() {
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+
+  const refresh = useCallback(async () => {
+    setProfile((await getProfile()) ?? null);
+  }, []);
+
+  useEffect(() => { refresh(); }, [refresh]);
+
+  return { profile, refresh };
 }
 
 // --- Journal ---
