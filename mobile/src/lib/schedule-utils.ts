@@ -1,8 +1,7 @@
 import type { Medication, MedicationFrequency, ScheduleEntry, TimeSlot } from "@/types";
+import { getMedications, getScheduleForDate, saveScheduleEntry } from "@/lib/storage";
 
-// Pure port of frontend/src/lib/schedule-utils.ts — cadence + generation only.
-// The persistence half (scheduleForToday / ensureScheduleForDate) lands with the
-// expo-sqlite storage layer in milestone 1.
+// Port of frontend/src/lib/schedule-utils.ts — cadence, generation, persistence.
 
 // ── Frequency normaliser ────────────────────────────────────────────────────
 // Maps raw AI strings ("twice daily", "BID", "every 12 hrs") → enum value.
@@ -88,4 +87,30 @@ export function buildScheduleEntries(med: Medication, date: string): ScheduleEnt
     skipped:  false,
     date,
   }));
+}
+
+// ── Persistence (mirrors frontend/src/lib/schedule-utils.ts) ────────────────
+
+// Persists only entries that don't already exist for the date, preserving the
+// taken/skipped state of any that do. Returns the number newly created.
+async function saveMissing(entries: ScheduleEntry[], date: string): Promise<number> {
+  const existing = await getScheduleForDate(date);
+  const have = new Set(existing.map((e) => e.id));
+  const missing = entries.filter((e) => !have.has(e.id));
+  await Promise.all(missing.map(saveScheduleEntry));
+  return missing.length;
+}
+
+// Materialize one medication's doses for today. Returns count saved (0 for as_needed).
+export async function scheduleForToday(med: Medication): Promise<number> {
+  const today = new Date().toISOString().split("T")[0];
+  return saveMissing(buildScheduleEntries(med, today), today);
+}
+
+// Materialize every active medication's doses for a date. Idempotent — safe to
+// call on every app foreground / day rollover.
+export async function ensureScheduleForDate(date: string): Promise<number> {
+  const meds = await getMedications();
+  const entries = meds.flatMap((m) => buildScheduleEntries(m, date));
+  return saveMissing(entries, date);
 }
