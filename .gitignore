@@ -1,6 +1,9 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 # Patterns are un-anchored so they apply in frontend/, backend/, and mobile/.
+
+# local-only planning docs (kept on disk, never tracked)
 /docs
+mobile/IMPLEMENTATION_PLAN.md
 
 # dependencies
 node_modules/
