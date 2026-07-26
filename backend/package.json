@@ -3,9 +3,23 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "packageManager": "pnpm@10.25.0",
   "engines": { "node": ">=22.18" },
   "scripts": {
-    "dev": "node --watch src/index.ts",
-    "start": "node src/index.ts"
+    "dev": "node --watch src/server.ts",
+    "start": "node src/server.ts",
+    "test": "node src/services/overdue.test.mjs",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "express": "^5.1.0",
+    "express-rate-limit": "^8.0.1",
+    "jsonwebtoken": "^9.0.2"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "@types/jsonwebtoken": "^9.0.7",
+    "@types/node": "^22",
+    "typescript": "^5"
   }
 }
