@@ -1,0 +1,19 @@
+# Render blueprint — one-click deploy of the always-on relay with a persistent disk.
+# (Railway/Fly: use the Dockerfile directly and attach a volume at /data.)
+services:
+  - type: web
+    name: medimate-backend
+    runtime: docker
+    plan: starter
+    healthCheckPath: /health
+    envVars:
+      - key: JWT_SECRET
+        generateValue: true      # Render generates + stores a strong secret
+      - key: NODE_ENV
+        value: production
+      - key: DATA_FILE
+        value: /data/data.json
+    disk:
+      name: data
+      mountPath: /data
+      sizeGB: 1
