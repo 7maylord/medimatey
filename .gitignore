@@ -5,6 +5,9 @@
 /docs
 mobile/IMPLEMENTATION_PLAN.md
 
+# backend runtime data
+backend/data.json
+
 # dependencies
 node_modules/
 .pnp
