@@ -38,9 +38,17 @@
       "expo-sharing",
       [
         "expo-camera",
-        { "cameraPermission": "MediMate uses the camera to read pill bottle labels." }
+        {
+          "cameraPermission": "MediMate uses the camera to read pill bottle labels."
+        }
       ],
-      ["expo-notifications", { "color": "#0D9488" }]
+      [
+        "expo-notifications",
+        {
+          "color": "#0D9488"
+        }
+      ],
+      "expo-secure-store"
     ],
     "experiments": {
       "typedRoutes": true,
