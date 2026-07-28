@@ -3,6 +3,7 @@ import { Platform } from "react-native";
 import { getScheduleForDate, updateScheduleEntry } from "@/lib/storage";
 import { ensureScheduleForDate } from "@/lib/schedule-utils";
 import { planNotifications } from "@/lib/notification-plan";
+import { syncIfEnabled } from "@/lib/caregiver";
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -56,6 +57,8 @@ export async function rescheduleAllReminders(): Promise<void> {
       },
     });
   }
+
+  void syncIfEnabled(); // fire-and-forget: keep the caregiver relay in step (no-op if off)
 }
 
 // Handles "Mark taken" from the notification (works with app backgrounded;
