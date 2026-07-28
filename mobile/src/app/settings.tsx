@@ -8,12 +8,21 @@ import * as Print from "expo-print";
 import { getProfile, saveProfile, exportBackup, importBackup, getMedications, getJournalEntries } from "@/lib/storage";
 import { checkInteractions } from "@/lib/drug-data";
 import { rescheduleAllReminders } from "@/lib/notifications";
+import {
+  isCaregiverAlertsEnabled, enableAsPatient, disableAsPatient, regeneratePairingCode, registerAsCaregiver,
+} from "@/lib/caregiver";
 import { colors } from "@/lib/theme";
 import type { UserProfile } from "@/types";
+
+const errMsg = (e: unknown) => (e instanceof Error ? e.message : "Something went wrong");
 
 export default function SettingsScreen() {
   const [form, setForm] = useState({ name: "", age: "", allergies: "", conditions: "" });
   const [saved, setSaved] = useState(false);
+  const [cgOn, setCgOn] = useState(false);
+  const [cgCode, setCgCode] = useState<string | null>(null);
+  const [cgInput, setCgInput] = useState("");
+  const [cgMsg, setCgMsg] = useState<string | null>(null);
 
   useEffect(() => {
     getProfile().then((p) => {
@@ -25,7 +34,29 @@ export default function SettingsScreen() {
         conditions: (p.conditions ?? []).join(", "),
       });
     });
+    isCaregiverAlertsEnabled().then(setCgOn);
   }, []);
+
+  async function cgTurnOn() {
+    setCgMsg(null);
+    try { setCgCode(await enableAsPatient()); setCgOn(true); }
+    catch (e) { setCgMsg(errMsg(e)); }
+  }
+  async function cgTurnOff() {
+    await disableAsPatient();
+    setCgOn(false); setCgCode(null);
+  }
+  async function cgShowCode() {
+    setCgMsg(null);
+    try { setCgCode(await regeneratePairingCode()); }
+    catch (e) { setCgMsg(errMsg(e)); }
+  }
+  async function cgWatch() {
+    setCgMsg(null);
+    if (!cgInput.trim()) return;
+    try { await registerAsCaregiver(cgInput); setCgInput(""); setCgMsg("Now watching. You'll be alerted on a missed dose."); }
+    catch (e) { setCgMsg(errMsg(e)); }
+  }
 
   async function handleSave() {
     const existing = await getProfile();
@@ -112,7 +143,41 @@ export default function SettingsScreen() {
       <Pressable style={s.secondaryBtn} onPress={handleImport}><Text style={s.secondaryText}>Restore from file</Text></Pressable>
       <Pressable style={s.secondaryBtn} onPress={handleReport}><Text style={s.secondaryText}>Doctor report (PDF)</Text></Pressable>
 
+      <Text style={s.section}>Caregiver alerts</Text>
       <Text style={s.footnote}>
+        Let a family member be notified if you miss a critical dose. Only the doses you choose to
+        monitor are shared with the relay — nothing else leaves your device.
+      </Text>
+
+      {cgOn ? (
+        <>
+          <Pressable style={s.secondaryBtn} onPress={cgShowCode}>
+            <Text style={s.secondaryText}>Show a pairing code for my caregiver</Text>
+          </Pressable>
+          {cgCode && <Text style={s.code}>{cgCode}</Text>}
+          <Pressable style={s.secondaryBtn} onPress={cgTurnOff}>
+            <Text style={s.secondaryText}>Turn off caregiver alerts</Text>
+          </Pressable>
+        </>
+      ) : (
+        <Pressable style={s.btn} onPress={cgTurnOn}>
+          <Text style={s.btnText}>Turn on caregiver alerts</Text>
+        </Pressable>
+      )}
+
+      <Text style={[s.footnote, { marginTop: 4 }]}>
+        Caring for someone? Enter their pairing code to receive their missed-dose alerts on this phone.
+      </Text>
+      <TextInput
+        style={s.input} placeholder="Pairing code" placeholderTextColor={colors.muted}
+        autoCapitalize="characters" value={cgInput} onChangeText={setCgInput}
+      />
+      <Pressable style={s.secondaryBtn} onPress={cgWatch}>
+        <Text style={s.secondaryText}>Watch this person&apos;s meds</Text>
+      </Pressable>
+      {cgMsg && <Text style={{ color: colors.teal, fontSize: 12 }}>{cgMsg}</Text>}
+
+      <Text style={[s.footnote, { marginTop: 16 }]}>
         All data stays on this device. Backups use the same file format as the MediMate web app.
         Not medical advice — always consult your healthcare provider.
       </Text>
@@ -128,5 +193,6 @@ const s = StyleSheet.create({
   btnText: { color: "#fff", fontWeight: "700" },
   secondaryBtn: { borderColor: colors.border, borderWidth: 1, borderRadius: 12, padding: 14, alignItems: "center" },
   secondaryText: { color: colors.text },
+  code: { color: colors.teal, fontSize: 26, fontWeight: "800", letterSpacing: 4, textAlign: "center", paddingVertical: 8 },
   footnote: { color: colors.muted, fontSize: 11, marginTop: 16, lineHeight: 16 },
 });
